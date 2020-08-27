@@ -2,14 +2,14 @@
 
 import requests
 import json
-import os, glob
+import os, glob, sys
 import pyzipper
 import ntpath
 from argparse import ArgumentParser
 
 ZIP_PASSWORD = b"infected"
 EXT_TO_CLEAN = "zip"
-KEY = ""
+KEY = os.environ.get("API_KEY")
 SAMPLES_PATH = "./samples/"
 
 def housekeeping(ext):
@@ -32,17 +32,11 @@ def get_sample(hash):
 
 def main():
     parser = ArgumentParser(description="A simple script that will download samples from Malware Bazaar API matching the user defined TAG")
-    parser.add_argument("-d", "--download", dest="get_sample", help="Download samples from Malware Bazaar", default=False)
-    parser.add_argument("-c", "--housecleaning", dest="clean_sample", help="Delete temporary zip files", default =False)
+    parser.add_argument("-d", "--download", dest="get_sample", help="Download samples from Malware Bazaar", action="store_true", default=False)
+    parser.add_argument("-c", "--housecleaning", dest="clean_sample", help="Delete temporary zip files", action="store_true", default=False)
     parser.add_argument("-t", "--tag", dest="tag_sample", help="Tag to search for on Malware Bazaar", default="Sodinokibi")
-    parser.add_argument("-k", "--apikey", dest="api_key", help="Malware Bazaar API key")
     args = parser.parse_args()
     # print("arguments:", args)
-    
-    if args.api_key is not None:
-        KEY = args.api_key
-    else:
-        KEY = os.environ.get("API_KEY")
 
     downloaded_samples = []
     data = { 'query': 'get_taginfo', 'tag': args.tag_sample, 'limit': 1000 }
