@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 ZIP_PASSWORD = b"infected"
 EXT_TO_CLEAN = "zip"
 KEY = ""
-SAMPLES_PATH = ""
+SAMPLES_PATH = "./samples/"
 
 def housekeeping(ext):
     try:
@@ -32,7 +32,6 @@ def get_sample(hash):
 
 def main():
     parser = ArgumentParser(description="A simple script that will download samples from Malware Bazaar API matching the user defined TAG")
-    parser.add_argument("path", help="Path where to save retrieved samples")
     parser.add_argument("-d", "--download", dest="get_sample", help="Download samples from Malware Bazaar", default=False)
     parser.add_argument("-c", "--housecleaning", dest="clean_sample", help="Delete temporary zip files", default =False)
     parser.add_argument("-t", "--tag", dest="tag_sample", help="Tag to search for on Malware Bazaar", default="Sodinokibi")
@@ -40,15 +39,13 @@ def main():
     args = parser.parse_args()
     # print("arguments:", args)
     
-    SAMPLES_PATH = args.path
-    
     if args.api_key is not None:
         KEY = args.api_key
     else:
         KEY = os.environ.get("API_KEY")
 
     downloaded_samples = []
-    data = { 'query': 'get_taginfo', 'tag': args.tag_sample }
+    data = { 'query': 'get_taginfo', 'tag': args.tag_sample, 'limit': 1000 }
     response = requests.post('https://mb-api.abuse.ch/api/v1/', data = data, timeout=10)
     maldata = response.json()
     #print(json.dumps(maldata, indent=2, sort_keys=False))
