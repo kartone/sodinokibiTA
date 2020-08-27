@@ -39,8 +39,8 @@ def query_vt(sample_list, rp, vt_api_key):
     headers = { 'x-apikey' : vt_api_key }
     # Retrieve the list of saved reports
     data_path = get_filename(rp)
-    print(data_path)
     for element in sample_list:
+        # Do not query VT for a saved report
         if element not in data_path:
             url = 'https://www.virustotal.com/api/v3/files/'+element+'/submissions'
             # This input is for debugging purposes and to not waste VT API usage limit
@@ -70,6 +70,7 @@ class Main(object):
 
         sl = get_filename(self.samples_path)
         query_vt(sl, self.reports_path, self.vt_api_key)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='This is the project description')
