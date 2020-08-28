@@ -9,8 +9,14 @@ import hashlib
 import pefile
 import struct
 import pandas as pd
+import numpy as np
+import geoviews as gv
+import geoviews.tile_sources as gvts
+from geoviews import dim, opts
 from opencage.geocoder import OpenCageGeocode
+from bokeh.io import output_notebook
 from Crypto.Cipher import ARC4
+
 
 excluded_sections = ['.text', '.rdata', '.data', '.reloc', '.rsrc', '.cfg']
 
@@ -97,17 +103,24 @@ def parse_vt_report(vt_reports, rp, sp, gc):
                     if j == 'attributes':
                         city = report["data"][i][j].get('city')
                         country = report["data"][i][j].get('country')
-                        timestamp = report["data"][i][j].get('date')
+                        # timestamp = report["data"][i][j].get('date')
                         sample_hash, aID, cID = decode_sodinokibi_configuration(rpt)
                         result = gc.geocode(city, limit=1, countrycode=country, no_annotation=1)
-                        print(result[0]['geometry'])
-                        attack = { 'city': city, 'country': country, 'timestamp': timestamp, 'aid': aID, 'cid': cID, 'hash': sample_hash }
+                        lat = result[0]['geometry']['lat']
+                        lng = result[0]['geometry']['lng']
+                        attack = { 'country': country, 'city': city, 'latitude': lat, 'longitude': lng, 'aid': aID, 'cid': cID, 'hash': sample_hash }
                         attacks.append(attack)
     return attacks
 
 def analysis(attacks, pd):
     df = pd.DataFrame(attacks)
     print(df)
+    output_notebook()
+    gv.extension('bokeh')
+    gv_points = gv.Points(df, ['longitude', 'latitude'], ['country', 'city', 'aid', 'cid', 'hash'])
+    gvts.CartoLight
+    gvts.CartoLight.options(width=1300, height=800, xaxis=None, yaxis=None, show_grid=False) * gv_points
+
 
 # local_datetime_converted = datetime.datetime.fromtimestamp(UTC_datetime_timestamp)
 
@@ -142,7 +155,6 @@ class Main(object):
         rl = get_filename(self.reports_path)
         attacks = parse_vt_report(rl, self.reports_path, self.samples_path, gc)
         analysis(attacks,pd)
-
 
 
 if __name__ == "__main__":
