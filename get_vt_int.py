@@ -8,6 +8,8 @@ import datetime
 import hashlib
 import pefile
 import struct
+import pandas as pd
+from opencage.geocoder import OpenCageGeocode
 from Crypto.Cipher import ARC4
 
 excluded_sections = ['.text', '.rdata', '.data', '.reloc', '.rsrc', '.cfg']
@@ -84,22 +86,28 @@ def query_vt(sample_list, rp, vt_api_key):
                 f.write(response.content)
                 logger.info('Report of %s sample saved' % file_path)
 
-def parse_vt_report(vt_reports, rp, sp):
+def parse_vt_report(vt_reports, rp, sp, gc):
+    attacks = []
     for rpt in vt_reports:
         report_path = os.path.join(rp, rpt)
         with open(report_path) as json_file:
             report = json.load(json_file)
             for i in range(len(report["data"])):
                 for j in report["data"][i].keys():
-                    city = report["data"][i][j].get('city')
-                    country = report["data"][i][j].get('country')
-                    timestamp = report["data"][i][j].get('date')
-                    sample_hash, aID, cID = decode_sodinokibi_configuration(rpt)
-                    # ToDo: build dictionary with these data
+                    if j == 'attributes':
+                        city = report["data"][i][j].get('city')
+                        country = report["data"][i][j].get('country')
+                        timestamp = report["data"][i][j].get('date')
+                        sample_hash, aID, cID = decode_sodinokibi_configuration(rpt)
+                        result = gc.geocode(city, limit=1, countrycode=country, no_annotation=1)
+                        print(result[0]['geometry'])
+                        attack = { 'city': city, 'country': country, 'timestamp': timestamp, 'aid': aID, 'cid': cID, 'hash': sample_hash }
+                        attacks.append(attack)
+    return attacks
 
-
-
-
+def analysis(attacks, pd):
+    df = pd.DataFrame(attacks)
+    print(df)
 
 # local_datetime_converted = datetime.datetime.fromtimestamp(UTC_datetime_timestamp)
 
@@ -110,6 +118,7 @@ class Main(object):
     def __init__(self, parser):
         args = parser.parse_args()
         self.vt_api_key = args.vt_api_key
+        self.oc_api_key = args.oc_api_key
         self.samples_path = args.spath
         self.reports_path = args.rpath
         self.logger = get_logger()
@@ -119,15 +128,27 @@ class Main(object):
             if not self.vt_api_key:
                 parser.print_help()
                 self.logger.error('[-] No VirusTotal Enterprise API key supplied')
+        
+        if not self.oc_api_key:
+            self.oc_api_key = os.environ.get("OC_API_KEY")
+            if not self.oc_api_key:
+                parser.print_help()
+                self.logger.error('[-] No OpenCage API key supplied')
+
+        gc = OpenCageGeocode(self.oc_api_key)
 
         sl = get_filename(self.samples_path)
         # query_vt(sl, self.reports_path, self.vt_api_key)
         rl = get_filename(self.reports_path)
-        parse_vt_report(rl, self.reports_path, self.samples_path)
+        attacks = parse_vt_report(rl, self.reports_path, self.samples_path, gc)
+        analysis(attacks,pd)
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='This is the project description')
     parser.add_argument('spath', action='store', help='Path to ransomware samples', default='./samples')
     parser.add_argument('rpath', action='store', help='Path to ransomware reports', default='./data')
     parser.add_argument('-vt', action='store', dest='vt_api_key', required=False, help='VirusTotal Enterprise API Key', default='12345')
+    parser.add_argument('-oc', action='store', dest='oc_api_key', required=False, help='OpenCage API Key', default='bd01b49a3a54406e89bd9051c6cd120e')
     Main(parser)
