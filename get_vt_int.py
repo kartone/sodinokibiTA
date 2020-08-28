@@ -13,9 +13,9 @@ import numpy as np
 import geoviews as gv
 import geoviews.tile_sources as gvts
 from geoviews import dim, opts
-from opencage.geocoder import OpenCageGeocode
-from bokeh.io import output_notebook
+from bokeh.io import output_file, show
 from Crypto.Cipher import ARC4
+from opencage.geocoder import OpenCageGeocode
 
 
 excluded_sections = ['.text', '.rdata', '.data', '.reloc', '.rsrc', '.cfg']
@@ -115,12 +115,14 @@ def parse_vt_report(vt_reports, rp, sp, gc):
 def analysis(attacks, pd):
     df = pd.DataFrame(attacks)
     print(df)
-    output_notebook()
+    df.to_csv('data.csv')
+    output_file("graph.html")
     gv.extension('bokeh')
     gv_points = gv.Points(df, ['longitude', 'latitude'], ['country', 'city', 'aid', 'cid', 'hash'])
-    gvts.CartoLight
-    gvts.CartoLight.options(width=1300, height=800, xaxis=None, yaxis=None, show_grid=False) * gv_points
-
+    layout = gvts.CartoLight * gv_points
+    #gvts.CartoLight.options(width=1300, height=800, xaxis=None, yaxis=None, show_grid=False) * gv_points
+    gv.output(layout)
+  
 
 # local_datetime_converted = datetime.datetime.fromtimestamp(UTC_datetime_timestamp)
 
