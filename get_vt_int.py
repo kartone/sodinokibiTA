@@ -1,7 +1,6 @@
 import requests
 import json
 import argparse
-import logging
 import os
 import ntpath
 import datetime
@@ -12,7 +11,6 @@ import pandas as pd
 import numpy as np
 from Crypto.Cipher import ARC4
 from opencage.geocoder import OpenCageGeocode
-from tqdm import tqdm
 
 
 excluded_sections = ['.text', '.rdata', '.data', '.reloc', '.rsrc', '.cfg']
