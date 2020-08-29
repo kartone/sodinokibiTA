@@ -105,23 +105,28 @@ def parse_vt_report(vt_reports, rp, sp, gc):
                         country = report["data"][i][j].get('country')
                         # timestamp = report["data"][i][j].get('date')
                         sample_hash, aID, cID = decode_sodinokibi_configuration(rpt)
+                        print("[+] Getting coordinates for city: {} in country {}".format(city, country))
                         result = gc.geocode(city, limit=1, countrycode=country, no_annotation=1)
-                        lat = result[0]['geometry']['lat']
-                        lng = result[0]['geometry']['lng']
-                        attack = { 'country': country, 'city': city, 'latitude': lat, 'longitude': lng, 'aid': aID, 'cid': cID, 'hash': sample_hash }
-                        attacks.append(attack)
+                        #result = gc.geocode('?', limit=1, countrycode='KR', no_annotation=1)
+                        if not result:
+                            print('Skipping report for city:{}, country:{}'.format(city, country))
+                        else:
+                            lat = result[0]['geometry']['lat']
+                            lng = result[0]['geometry']['lng']
+                            attack = { 'country': country, 'city': city, 'latitude': lat, 'longitude': lng, 'aid': aID, 'cid': cID, 'hash': sample_hash }
+                            attacks.append(attack)
     return attacks
 
 def analysis(attacks, pd):
     df = pd.DataFrame(attacks)
     print(df)
     df.to_csv('data.csv')
-    output_file("graph.html")
-    gv.extension('bokeh')
-    gv_points = gv.Points(df, ['longitude', 'latitude'], ['country', 'city', 'aid', 'cid', 'hash'])
-    layout = gvts.CartoLight * gv_points
-    #gvts.CartoLight.options(width=1300, height=800, xaxis=None, yaxis=None, show_grid=False) * gv_points
-    gv.output(layout)
+    # output_file("graph.html")
+    # gv.extension('bokeh')
+    # gv_points = gv.Points(df, ['longitude', 'latitude'], ['country', 'city', 'aid', 'cid', 'hash'])
+    # layout = gvts.CartoLight * gv_points
+    # #gvts.CartoLight.options(width=1300, height=800, xaxis=None, yaxis=None, show_grid=False) * gv_points
+    # gv.output(layout)
   
 
 # local_datetime_converted = datetime.datetime.fromtimestamp(UTC_datetime_timestamp)
@@ -153,7 +158,7 @@ class Main(object):
         gc = OpenCageGeocode(self.oc_api_key)
 
         sl = get_filename(self.samples_path)
-        # query_vt(sl, self.reports_path, self.vt_api_key)
+        #query_vt(sl, self.reports_path, self.vt_api_key)
         rl = get_filename(self.reports_path)
         attacks = parse_vt_report(rl, self.reports_path, self.samples_path, gc)
         analysis(attacks,pd)
@@ -163,6 +168,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='This is the project description')
     parser.add_argument('spath', action='store', help='Path to ransomware samples', default='./samples')
     parser.add_argument('rpath', action='store', help='Path to ransomware reports', default='./data')
-    parser.add_argument('-vt', action='store', dest='vt_api_key', required=False, help='VirusTotal Enterprise API Key', default='12345')
+    parser.add_argument('-vt', action='store', dest='vt_api_key', required=False, help='VirusTotal Enterprise API Key')
     parser.add_argument('-oc', action='store', dest='oc_api_key', required=False, help='OpenCage API Key', default='bd01b49a3a54406e89bd9051c6cd120e')
     Main(parser)
