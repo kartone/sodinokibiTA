@@ -34,7 +34,7 @@ def decode_sodinokibi_configuration(f):
             enc_len = struct.unpack('I', data[0x24:0x28])[0]
             dec_data = arc4(data[0:32], data[0x28:enc_len + 0x28])
             parsed = json.loads(dec_data[:-1])
-    return str_hash, parsed['pid'], parsed['sub']
+            return str_hash, parsed['pid'], parsed['sub']
             #print("Sample SHA256 Hash: ", str_hash)
             #print("Actor ID: ", parsed['pid'])
             #print("Campaign ID: ", parsed['sub'])
@@ -121,7 +121,8 @@ class Main(object):
         gc = OpenCageGeocode(self.oc_api_key)
 
         sl = get_filename(self.samples_path)
-        #query_vt(sl, self.reports_path, self.vt_api_key)
+        # Comment this line if you do want to query VirusTotal
+        query_vt(sl, self.reports_path, self.vt_api_key)
         rl = get_filename(self.reports_path)
         attacks = parse_vt_report(rl, self.reports_path, self.samples_path, gc)
         analysis(attacks,pd)
