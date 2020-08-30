@@ -3,14 +3,15 @@ import json
 import argparse
 import os
 import ntpath
+import shutil as sh
 import datetime
 import hashlib
 import pefile
 import struct
 import pandas as pd
-import numpy as np
 from Crypto.Cipher import ARC4
 from opencage.geocoder import OpenCageGeocode
+from pathlib import Path
 
 excluded_sections = ['.text', '.rdata', '.data', '.reloc', '.rsrc', '.cfg']
 
@@ -90,7 +91,13 @@ def parse_vt_report(vt_reports, rp, sp, gc):
 def dump_data(attacks, pd):
     df = pd.DataFrame(attacks)
     print(df)
-    df.to_csv('data.csv', index=False)
+    dumped_df = './data.csv'
+    backup_df = './data.bak'
+    if Path(dumped_df).is_file():
+        sh.copy2(dumped_df, backup_df)
+        df.to_csv(dumped_df, index=False)
+    else:
+        df.to_csv(dumped_df, index=False)
 
 # local_datetime_converted = datetime.datetime.fromtimestamp(UTC_datetime_timestamp)
 
