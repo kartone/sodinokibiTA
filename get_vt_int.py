@@ -103,7 +103,7 @@ def dump_data(attacks, pd):
 
 class Main(object):
     """
-    Main class for sodinokibiTA project
+    Main class for Project Sodinokibi TA
     """
     def __init__(self, parser):
         args = parser.parse_args()
