@@ -1,3 +1,6 @@
-.DS_STORE
 samples/*
 data/*
+
+.DS_STORE
+launch.json
+settings.json

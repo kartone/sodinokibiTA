@@ -12,7 +12,6 @@ import numpy as np
 from Crypto.Cipher import ARC4
 from opencage.geocoder import OpenCageGeocode
 
-
 excluded_sections = ['.text', '.rdata', '.data', '.reloc', '.rsrc', '.cfg']
 
 def arc4(key, enc_data):
@@ -49,14 +48,14 @@ def get_filename(path):
 
 def query_vt(sample_list, rp, vt_api_key):
     headers = { 'x-apikey' : vt_api_key }
-    # Retrieve the list of saved reports
+    # Retrieve the list of saved reports in ./data path
     data_path = get_filename(rp)
     for element in sample_list:
         # Do not query VT for a saved report
         if element not in data_path:
             url = 'https://www.virustotal.com/api/v3/files/'+element+'/submissions'
             # This input is for debugging purposes and to not waste VT API usage limit
-            input('Press any key to query VirusTotal...')
+            input('Press any key to query VirusTotal Enterprise API backend...')
             response = requests.get(url, timeout=10, headers=headers, allow_redirects = True)
             file_path = os.path.join(rp, element)
             with open(file_path, 'wb') as f:
@@ -88,7 +87,7 @@ def parse_vt_report(vt_reports, rp, sp, gc):
                             attacks.append(attack)
     return attacks
 
-def analysis(attacks, pd):
+def dump_data(attacks, pd):
     df = pd.DataFrame(attacks)
     print(df)
     df.to_csv('data.csv', index=False)
@@ -125,13 +124,13 @@ class Main(object):
         query_vt(sl, self.reports_path, self.vt_api_key)
         rl = get_filename(self.reports_path)
         attacks = parse_vt_report(rl, self.reports_path, self.samples_path, gc)
-        analysis(attacks,pd)
+        dump_data(attacks,pd)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='This is the project description')
+    parser = argparse.ArgumentParser(description='Project Sodinokibi')
     parser.add_argument('spath', action='store', help='Path to ransomware samples', default='./samples')
     parser.add_argument('rpath', action='store', help='Path to ransomware reports', default='./data')
     parser.add_argument('-vt', action='store', dest='vt_api_key', required=False, help='VirusTotal Enterprise API Key')
-    parser.add_argument('-oc', action='store', dest='oc_api_key', required=False, help='OpenCage API Key', default='bd01b49a3a54406e89bd9051c6cd120e')
+    parser.add_argument('-oc', action='store', dest='oc_api_key', required=False, help='OpenCage API Key')
     Main(parser)
