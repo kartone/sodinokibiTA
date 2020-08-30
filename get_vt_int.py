@@ -50,10 +50,10 @@ def get_filename(path):
 def query_vt(sample_list, rp, vt_api_key):
     headers = { 'x-apikey' : vt_api_key }
     # Retrieve the list of saved reports in ./data path
-    data_path = get_filename(rp)
+    reports_path = get_filename(rp)
     for element in sample_list:
         # Do not query VT for a saved report
-        if element not in data_path:
+        if element not in reports_path:
             url = 'https://www.virustotal.com/api/v3/files/'+element+'/submissions'
             # This input is for debugging purposes and to not waste VT API usage limit
             input('Press any key to query VirusTotal Enterprise API backend...')
@@ -116,23 +116,21 @@ class Main(object):
             self.vt_api_key = os.environ.get("VT_API_KEY")
             if not self.vt_api_key:
                 parser.print_help()
-                self.logger.error('[-] No VirusTotal Enterprise API key supplied')
+                print('[-] No VirusTotal Enterprise API key supplied')
         
         if not self.oc_api_key:
             self.oc_api_key = os.environ.get("OC_API_KEY")
             if not self.oc_api_key:
                 parser.print_help()
-                self.logger.error('[-] No OpenCage API key supplied')
+                print('[-] No OpenCage API key supplied')
 
         gc = OpenCageGeocode(self.oc_api_key)
-
         sl = get_filename(self.samples_path)
         # Comment this line if you do want to query VirusTotal
         query_vt(sl, self.reports_path, self.vt_api_key)
         rl = get_filename(self.reports_path)
         attacks = parse_vt_report(rl, self.reports_path, self.samples_path, gc)
         dump_data(attacks,pd)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Project Sodinokibi')
